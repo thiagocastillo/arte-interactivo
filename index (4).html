@@ -1,0 +1,1636 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CREA · Arte Interactivo — Juegos del proyecto</title>
+<style>
+/* ============================================================
+   TOKENS
+   ============================================================ */
+:root{
+  --ink:#1A1B2B;
+  --ink-2:#454764;
+  --ink-3:#71748F;
+  --ink-4:#A3A6BD;
+  --line:#E4E3EE;
+  --line-2:#EFEEF6;
+
+  --paper:#FCFAF5;
+  --paper-2:#F3F1EA;
+  --rule:#E9E7F0;
+  --margin:#D9A9A4;
+
+  --art:#6A4FCF;
+  --art-d:#563EB2;
+  --art-dd:#3F2C86;
+  --art-l:#EBE6FA;
+  --art-ll:#F6F3FD;
+
+  --glow:#E29A2B;
+  --glow-d:#B87A0F;
+  --glow-l:#FCF0DA;
+
+  --coral:#D3564F;
+  --coral-l:#FBE9E7;
+
+  --c-evento:#D79A26;
+  --c-movimiento:#3D77C4;
+  --c-control:#CE7429;
+  --c-apariencia:#7C5EC0;
+  --c-sonido:#BB55A6;
+  --c-sensores:#3E96B8;
+
+  --s1:4px; --s2:8px; --s3:12px; --s4:16px; --s5:20px; --s6:24px; --s7:32px; --s8:40px; --s9:56px;
+  --r1:10px; --r2:14px; --r3:20px;
+
+  --e0:0 1px 1px rgba(26,27,43,.04);
+  --e1:0 1px 2px rgba(26,27,43,.06), 0 1px 1px rgba(26,27,43,.03);
+  --e2:0 2px 6px rgba(26,27,43,.07), 0 1px 2px rgba(26,27,43,.04);
+  --e3:0 18px 40px -22px rgba(26,27,43,.42), 0 2px 6px rgba(26,27,43,.05);
+
+  --font:system-ui,-apple-system,"Segoe UI",Cantarell,"Noto Sans","DejaVu Sans",sans-serif;
+  --mono:ui-monospace,"DejaVu Sans Mono",Menlo,Consolas,monospace;
+  --ease:cubic-bezier(.22,.7,.25,1);
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  font-family:var(--font);color:var(--ink);font-size:16px;line-height:1.55;
+  background:linear-gradient(180deg,#EFEDF7 0%,#E8E6F2 42%,#E3E1EE 100%);
+  background-attachment:fixed;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;
+}
+.app{max-width:960px;margin:0 auto;padding:var(--s6) var(--s4) var(--s9);}
+h1,h2,h3{font-weight:750;letter-spacing:-.021em;margin:0;line-height:1.18;}
+p{margin:0;}
+.eyebrow{font-size:12px;color:var(--ink-3);font-weight:600;margin:0;}
+.svg-ico{
+  width:1em;height:1em;display:inline-block;vertical-align:-.14em;fill:none;
+  stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;
+}
+.svg-ico.fill{fill:currentColor;stroke:none;}
+::selection{background:var(--art-l);}
+:focus-visible{outline:2.5px solid var(--art);outline-offset:2px;}
+
+/* ============================================================
+   HERO
+   ============================================================ */
+.hero{background:#fff;border-radius:var(--r3);overflow:hidden;box-shadow:var(--e3);}
+#escena{display:block;width:100%;height:auto;}
+.hero-bar{
+  display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;
+  gap:var(--s4);padding:var(--s5) var(--s6);border-top:1px solid var(--line-2);
+}
+.hero-bar h1{font-size:clamp(21px,3vw,27px);margin-top:2px;}
+.hero-bar .lema{font-size:13.5px;color:var(--ink-3);margin-top:var(--s1);}
+.marcador{min-width:190px;}
+.marcador .top{display:flex;align-items:baseline;gap:var(--s2);}
+.marcador .estrella{color:var(--glow);font-size:15px;align-self:center;display:flex;}
+.marcador .cifra{font-family:var(--mono);font-size:23px;font-weight:600;letter-spacing:-.03em;font-variant-numeric:tabular-nums;}
+.marcador .lbl{font-size:12.5px;color:var(--ink-3);}
+.marcador .barra{height:5px;border-radius:99px;background:var(--line);margin-top:var(--s2);overflow:hidden;}
+.marcador .relleno{height:100%;width:0;border-radius:99px;background:var(--art);transition:width .65s var(--ease);}
+.marcador.pulso .cifra{animation:pop .4s var(--ease);}
+@keyframes pop{0%{transform:scale(1);}40%{transform:scale(1.13);}100%{transform:scale(1);}}
+.chip-suma{
+  position:fixed;font-family:var(--mono);font-weight:600;font-size:13.5px;color:var(--art-d);
+  pointer-events:none;z-index:60;animation:sube .95s var(--ease) forwards;
+}
+@keyframes sube{0%{opacity:0;transform:translateY(4px);}22%{opacity:1;transform:translateY(-2px);}100%{opacity:0;transform:translateY(-30px);}}
+
+/* ============================================================
+   CAMINO
+   ============================================================ */
+.camino{margin:var(--s6) 0 var(--s5);}
+.rail{display:flex;gap:var(--s2);overflow-x:auto;padding:var(--s1) 2px var(--s3);scroll-snap-type:x proximity;scrollbar-width:thin;}
+.rail::-webkit-scrollbar{height:5px;}
+.rail::-webkit-scrollbar-thumb{background:rgba(26,27,43,.15);border-radius:99px;}
+.etapa-card{
+  flex:none;width:168px;scroll-snap-align:start;text-align:left;cursor:pointer;
+  background:#fff;border:1px solid var(--line);border-radius:var(--r2);
+  padding:var(--s3);box-shadow:var(--e0);font-family:inherit;color:var(--ink);
+  transition:border-color .2s var(--ease), box-shadow .2s var(--ease), transform .2s var(--ease), background .2s var(--ease);
+}
+.etapa-card:hover{border-color:var(--ink-4);box-shadow:var(--e2);transform:translateY(-1px);}
+.etapa-card .fila1{display:flex;align-items:center;gap:var(--s2);margin-bottom:var(--s2);}
+.etapa-card .badge{font-family:var(--mono);font-size:12px;font-weight:600;color:var(--ink-3);}
+.etapa-card .estado{margin-left:auto;display:flex;font-size:15px;color:var(--ink-4);}
+.etapa-card .nom{
+  font-size:13px;font-weight:650;line-height:1.35;letter-spacing:-.012em;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:35px;
+}
+.etapa-card .dots{display:flex;gap:3px;margin-top:var(--s3);}
+.etapa-card .dots i{flex:1;height:3px;border-radius:99px;background:var(--line);transition:background .3s var(--ease);}
+.etapa-card .dots i.on{background:var(--art);}
+.etapa-card.bloqueada{background:var(--paper-2);border-color:transparent;box-shadow:none;}
+.etapa-card.bloqueada .nom{color:var(--ink-3);}
+.etapa-card.completa .estado{color:var(--art);}
+.etapa-card.activa{border-color:var(--art);box-shadow:inset 0 0 0 1px var(--art), var(--e2);}
+.etapa-card.activa .badge{color:var(--art-d);}
+
+/* ============================================================
+   HOJA (bitácora)
+   ============================================================ */
+.hoja{
+  position:relative;background:var(--paper);border-radius:var(--r3);
+  box-shadow:var(--e3);padding:var(--s7) var(--s7) var(--s7) var(--s9);overflow:hidden;
+}
+.hoja::before{
+  content:"";position:absolute;inset:0;pointer-events:none;
+  background:repeating-linear-gradient(to bottom, transparent 0 33px, var(--rule) 33px 34px);opacity:.5;
+}
+.hoja::after{content:"";position:absolute;top:0;bottom:0;left:38px;width:1px;background:var(--margin);opacity:.45;pointer-events:none;}
+.espiral{position:absolute;top:var(--s7);bottom:var(--s7);left:15px;width:9px;pointer-events:none;display:flex;flex-direction:column;justify-content:space-between;}
+.espiral i{width:9px;height:9px;border-radius:50%;background:#EBE9F1;box-shadow:inset 0 1px 1.5px rgba(26,27,43,.22);}
+.hoja > *{position:relative;z-index:1;}
+.enc{margin-bottom:var(--s6);}
+.enc h2{font-size:clamp(20px,2.4vw,25px);margin-top:var(--s1);}
+.titulo-act{font-size:17px;font-weight:700;letter-spacing:-.015em;}
+.consigna{margin-top:var(--s2);font-size:14.5px;color:var(--ink-2);max-width:62ch;}
+.consigna strong{color:var(--ink);font-weight:650;}
+.bloque-act{margin-top:var(--s6);}
+.lienzo{margin-top:var(--s5);}
+
+/* ============================================================
+   BOTONES
+   ============================================================ */
+.btn{
+  font-family:inherit;font-size:14.5px;font-weight:650;cursor:pointer;letter-spacing:-.005em;
+  border:1px solid transparent;border-radius:var(--r1);padding:11px 17px;
+  background:#fff;color:var(--ink);box-shadow:var(--e1);
+  display:inline-flex;align-items:center;gap:var(--s2);text-decoration:none;
+  transition:background .18s var(--ease), border-color .18s var(--ease), box-shadow .18s var(--ease), transform .18s var(--ease), color .18s var(--ease);
+}
+.btn .svg-ico{font-size:16px;}
+.btn:hover:not(:disabled){transform:translateY(-1px);box-shadow:var(--e2);}
+.btn:active:not(:disabled){transform:translateY(0);box-shadow:var(--e0);}
+.btn:disabled{opacity:.45;cursor:default;box-shadow:none;}
+.btn-1{background:var(--art);color:#fff;box-shadow:0 1px 2px rgba(26,27,43,.14);}
+.btn-1:hover:not(:disabled){background:var(--art-d);}
+.btn-2{border-color:var(--line);color:var(--ink-2);}
+.btn-2:hover:not(:disabled){border-color:var(--ink-4);color:var(--ink);}
+.btn-sol{background:var(--glow);color:#3A2704;box-shadow:0 1px 2px rgba(26,27,43,.14);}
+.btn-sol:hover:not(:disabled){background:var(--glow-d);color:#fff;}
+.btn-cta{background:var(--art);color:#fff;font-size:15.5px;padding:13px 22px;box-shadow:0 2px 4px rgba(26,27,43,.16);}
+.btn-cta:hover:not(:disabled){background:var(--art-d);}
+.fila{display:flex;flex-wrap:wrap;gap:var(--s2);margin-top:var(--s6);align-items:center;}
+
+/* ============================================================
+   FEEDBACK
+   ============================================================ */
+.fb{display:none;margin-top:var(--s5);padding:var(--s4);border-radius:var(--r2);gap:var(--s3);align-items:flex-start;border:1px solid transparent;}
+.fb.on{display:flex;animation:entra .26s var(--ease);}
+@keyframes entra{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:none;}}
+.fb .ic{font-size:19px;line-height:1;margin-top:1px;flex:none;}
+.fb .tit{font-weight:700;font-size:14.5px;letter-spacing:-.012em;}
+.fb .txt{font-size:14px;color:var(--ink-2);margin-top:2px;}
+.fb .pista{margin-top:var(--s3);padding-top:var(--s3);border-top:1px solid rgba(26,27,43,.09);font-size:13.5px;color:var(--ink-2);display:flex;align-items:center;gap:var(--s2);flex-wrap:wrap;}
+.fb-ok{background:var(--art-ll);border-color:rgba(106,79,207,.22);}
+.fb-ok .ic,.fb-ok .tit{color:var(--art-d);}
+.fb-casi{background:var(--glow-l);border-color:rgba(226,154,43,.32);}
+.fb-casi .ic,.fb-casi .tit{color:var(--glow-d);}
+.fb-info{background:#fff;border-color:var(--line);}
+.fb-info .ic,.fb-info .tit{color:var(--ink-3);}
+.pasos{display:flex;gap:var(--s1);align-items:center;margin-top:var(--s5);flex-wrap:wrap;}
+.pasos i{width:22px;height:3px;border-radius:99px;background:var(--line);transition:background .3s var(--ease);}
+.pasos i.hecho{background:var(--art);}
+.pasos i.actual{background:var(--glow);}
+.pasos .n{font-family:var(--mono);font-size:11.5px;color:var(--ink-4);margin-left:var(--s2);font-variant-numeric:tabular-nums;}
+
+/* ============================================================
+   SALA (escena de la muestra)
+   ============================================================ */
+.sala{
+  position:relative;border-radius:var(--r2);height:172px;overflow:hidden;
+  background:linear-gradient(180deg,#E7E3F4 0%,#DEDAEE 66%,#C8BFA8 66%,#BDB39B 100%);
+  box-shadow:inset 0 0 0 1px rgba(26,27,43,.05);
+  display:flex;align-items:center;justify-content:center;
+}
+.sala .foco{
+  position:absolute;top:-42px;left:50%;width:190px;height:190px;transform:translateX(-50%);
+  background:radial-gradient(circle at 50% 0%, rgba(255,236,190,.85), rgba(255,236,190,0) 68%);
+}
+.sala .base{position:absolute;bottom:26px;width:104px;height:14px;border-radius:50%;background:rgba(26,27,43,.14);filter:blur(2px);}
+.sala .pieza{position:relative;font-size:60px;line-height:1;margin-bottom:14px;filter:drop-shadow(0 8px 8px rgba(26,27,43,.16));}
+.sala .pieza.entra{animation:revela .55s var(--ease);}
+@keyframes revela{0%{transform:translateY(8px) scale(.86);opacity:0;}100%{transform:none;opacity:1;}}
+
+/* ============================================================
+   OPCIONES
+   ============================================================ */
+.pregunta{font-size:18.5px;font-weight:700;letter-spacing:-.02em;line-height:1.35;margin-top:var(--s5);max-width:56ch;}
+.opciones{display:grid;gap:var(--s2);margin-top:var(--s4);}
+.op{
+  text-align:left;cursor:pointer;font-family:inherit;font-size:14.5px;color:var(--ink);
+  background:#fff;border:1px solid var(--line);border-radius:var(--r1);
+  padding:13px 15px;box-shadow:var(--e0);display:flex;align-items:center;gap:var(--s3);
+  transition:border-color .18s var(--ease), box-shadow .18s var(--ease), background .18s var(--ease);
+}
+.op:hover:not(:disabled){border-color:var(--art);box-shadow:var(--e2);}
+.op .marca{
+  width:18px;height:18px;flex:none;border-radius:50%;border:1.5px solid var(--line);
+  display:flex;align-items:center;justify-content:center;font-size:11px;color:transparent;
+  transition:background .2s var(--ease), border-color .2s var(--ease), color .2s var(--ease);
+}
+.op:hover:not(:disabled) .marca{border-color:var(--ink-4);}
+.op.acierto{border-color:var(--art);background:var(--art-ll);}
+.op.acierto .marca{background:var(--art);border-color:var(--art);color:#fff;}
+.op.fallo{border-color:var(--glow);background:var(--glow-l);}
+.op.fallo .marca{background:var(--glow);border-color:var(--glow);color:#fff;}
+.op.opaca{opacity:.42;}
+
+.tarjetas{display:grid;grid-template-columns:1fr 1fr;gap:var(--s3);margin-top:var(--s4);}
+.tarjeta-op{
+  text-align:left;cursor:pointer;font-family:inherit;color:var(--ink);
+  background:#fff;border:1px solid var(--line);border-radius:var(--r2);
+  padding:var(--s4);box-shadow:var(--e0);display:flex;gap:var(--s3);align-items:flex-start;
+  transition:border-color .18s var(--ease), box-shadow .18s var(--ease), transform .18s var(--ease), background .18s var(--ease);
+}
+.tarjeta-op:hover:not(:disabled){border-color:var(--art);box-shadow:var(--e2);transform:translateY(-1px);}
+.tarjeta-op:disabled{cursor:default;}
+.tarjeta-op .mini{font-size:19px;color:var(--ink-3);margin-top:1px;flex:none;transition:color .18s var(--ease);}
+.tarjeta-op:hover:not(:disabled) .mini{color:var(--art);}
+.tarjeta-op .t{font-weight:700;font-size:14.5px;letter-spacing:-.012em;display:block;}
+.tarjeta-op .d{font-size:12.5px;color:var(--ink-3);line-height:1.42;margin-top:2px;display:block;}
+.tarjeta-op.acierto{border-color:var(--art);background:var(--art-ll);}
+.tarjeta-op.acierto .mini{color:var(--art);}
+.tarjeta-op.fallo{border-color:var(--glow);background:var(--glow-l);}
+.tarjeta-op.fallo .mini{color:var(--glow-d);}
+.tarjeta-op.opaca{opacity:.4;}
+
+/* ============================================================
+   CADENA entrada · programa · salida
+   ============================================================ */
+.obra-cab{display:flex;align-items:center;gap:var(--s3);margin-top:var(--s4);}
+.obra-cab .em{font-size:30px;line-height:1;}
+.obra-cab .nom{font-size:16px;font-weight:700;letter-spacing:-.015em;}
+.cadena{
+  display:grid;grid-template-columns:1fr auto 1fr auto 1fr;align-items:stretch;gap:var(--s2);
+  margin-top:var(--s4);
+}
+.eslabon{
+  background:#fff;border:1px solid var(--line);border-radius:var(--r2);padding:var(--s3) var(--s4);
+  box-shadow:var(--e0);min-height:92px;display:flex;flex-direction:column;justify-content:center;
+  transition:border-color .22s var(--ease), background .22s var(--ease);
+}
+.eslabon .rot{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-4);}
+.eslabon .val{font-size:13.5px;color:var(--ink-2);margin-top:var(--s1);line-height:1.4;}
+.eslabon .val.vacio{color:var(--ink-4);font-style:italic;}
+.eslabon.activo{border-color:var(--art);border-style:dashed;background:var(--art-ll);}
+.eslabon.activo .rot{color:var(--art-d);}
+.eslabon.lleno{border-color:rgba(106,79,207,.35);}
+.eslabon.programa{background:var(--ink);border-color:var(--ink);text-align:center;align-items:center;}
+.eslabon.programa .rot{color:rgba(255,255,255,.6);}
+.eslabon.programa .ic{color:#fff;font-size:20px;margin-top:var(--s1);}
+.flecha-cad{display:flex;align-items:center;color:var(--ink-4);font-size:18px;}
+
+/* ============================================================
+   BLOQUES
+   ============================================================ */
+.taller{display:grid;grid-template-columns:1fr 1fr;gap:var(--s3);margin-top:var(--s4);}
+.panel{background:#fff;border:1px solid var(--line);border-radius:var(--r2);padding:var(--s4);box-shadow:var(--e0);min-height:216px;}
+.panel.destino{background:var(--art-ll);border-style:dashed;border-color:rgba(106,79,207,.32);box-shadow:none;}
+.panel h4{font-size:12px;font-weight:650;color:var(--ink-3);margin:0 0 var(--s3);display:flex;align-items:center;gap:var(--s2);}
+.panel h4 .svg-ico{font-size:14px;}
+.pila{display:grid;gap:var(--s2);}
+.bloque{
+  position:relative;text-align:left;font-family:inherit;font-size:13px;font-weight:650;color:#fff;
+  border:0;border-radius:9px;padding:11px 12px 11px 36px;cursor:pointer;width:100%;
+  box-shadow:inset 0 -2px 0 rgba(0,0,0,.16);letter-spacing:-.008em;line-height:1.35;
+  transition:filter .18s var(--ease), transform .18s var(--ease), box-shadow .18s var(--ease);
+}
+.bloque .cat-ic{position:absolute;left:11px;top:11.5px;font-size:15px;opacity:.9;}
+.bloque:hover:not(:disabled){transform:translateY(-1px);filter:brightness(1.07);box-shadow:inset 0 -2px 0 rgba(0,0,0,.16), var(--e2);}
+.bloque.puesto{cursor:default;animation:encastra .32s var(--ease);}
+@keyframes encastra{0%{transform:translateY(-6px);opacity:0;}100%{transform:none;opacity:1;}}
+.bloque.sangria{margin-left:16px;}
+.b-evento{background:var(--c-evento);}
+.b-movimiento{background:var(--c-movimiento);}
+.b-control{background:var(--c-control);}
+.b-apariencia{background:var(--c-apariencia);}
+.b-sonido{background:var(--c-sonido);}
+.b-sensores{background:var(--c-sensores);}
+.vacio{font-size:13px;color:var(--ink-4);text-align:center;padding:var(--s7) var(--s2);line-height:1.5;}
+.pill-cat{display:inline-flex;align-items:center;gap:5px;border-radius:99px;padding:3px 10px;font-size:12px;font-weight:650;color:#fff;}
+.pill-cat .svg-ico{font-size:13px;}
+.entorno{
+  display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:11.5px;
+  color:var(--ink-3);border:1px solid var(--line);border-radius:99px;padding:3px 11px;background:#fff;
+}
+
+/* ============================================================
+   PAREJAS
+   ============================================================ */
+.parejas{display:grid;grid-template-columns:1fr 1fr;gap:var(--s3);margin-top:var(--s4);}
+.parejas .col{display:grid;gap:var(--s2);align-content:start;}
+.parejas .cab{font-size:12px;font-weight:650;color:var(--ink-3);padding-left:2px;}
+.par-btn{
+  text-align:left;font-family:inherit;font-size:14px;cursor:pointer;color:var(--ink);
+  background:#fff;border:1px solid var(--line);border-radius:var(--r1);
+  padding:11px 13px;box-shadow:var(--e0);display:flex;align-items:center;gap:var(--s2);
+  transition:border-color .18s var(--ease), box-shadow .18s var(--ease), background .18s var(--ease);
+}
+.par-btn:hover:not(:disabled){border-color:var(--ink-4);box-shadow:var(--e2);}
+.par-btn.concepto{font-weight:700;}
+.par-btn.elegido{border-color:var(--coral);background:var(--coral-l);}
+.par-btn.elegido .pin{color:var(--coral);}
+.par-btn.unido{background:var(--art-ll);border-color:rgba(106,79,207,.35);color:var(--art-dd);cursor:default;box-shadow:none;}
+.par-btn.unido .pin{color:var(--art);}
+.par-btn .pin{font-size:15px;flex:none;color:var(--ink-4);display:flex;transition:color .18s var(--ease);}
+
+/* ============================================================
+   CANDADO
+   ============================================================ */
+.candado{text-align:center;max-width:420px;margin:var(--s3) auto var(--s2);}
+.candado .escena-robot{width:132px;height:auto;margin:0 auto var(--s4);display:block;}
+.candado h2{font-size:22px;}
+.candado p.exp{font-size:14.5px;color:var(--ink-2);margin:var(--s2) auto var(--s6);max-width:36ch;}
+.letras{display:flex;justify-content:center;gap:6px;margin-bottom:var(--s4);}
+.letras i{width:22px;height:2px;border-radius:99px;background:var(--ink-4);opacity:.5;}
+.candado input{
+  font-family:var(--mono);font-size:19px;text-align:center;letter-spacing:.2em;font-weight:500;
+  border:1px solid var(--line);border-radius:var(--r1);padding:13px 16px;
+  width:260px;max-width:100%;background:#fff;color:var(--ink);box-shadow:var(--e1);
+  transition:border-color .18s var(--ease);
+}
+.candado input::placeholder{color:var(--ink-4);letter-spacing:.3em;}
+.candado input.error{border-color:var(--glow);animation:tiembla .32s var(--ease);}
+@keyframes tiembla{0%,100%{transform:translateX(0);}22%{transform:translateX(-6px);}66%{transform:translateX(6px);}}
+.candado .fila{justify-content:center;margin-top:var(--s4);}
+.candado .fb{text-align:left;}
+
+/* ============================================================
+   CIERRE
+   ============================================================ */
+.cierre{max-width:520px;margin:0 auto;}
+.cierre .sello{
+  width:52px;height:52px;border-radius:50%;background:var(--art);color:#fff;
+  display:flex;align-items:center;justify-content:center;font-size:26px;animation:sello .45s var(--ease);
+}
+@keyframes sello{0%{transform:scale(.5);opacity:0;}100%{transform:none;opacity:1;}}
+.cierre h2{font-size:23px;margin-top:var(--s4);}
+.cierre .sub{color:var(--ink-3);font-size:14.5px;margin-top:var(--s1);}
+.stats{display:flex;gap:var(--s7);margin:var(--s6) 0;padding:var(--s4) 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line);}
+.stat .v{font-family:var(--mono);font-size:21px;font-weight:600;color:var(--art-d);font-variant-numeric:tabular-nums;letter-spacing:-.03em;}
+.stat .l{font-size:12.5px;color:var(--ink-3);margin-top:1px;}
+.aprendido{display:flex;gap:var(--s3);margin-bottom:var(--s5);}
+.aprendido .ic{font-size:19px;color:var(--glow-d);flex:none;margin-top:2px;}
+.aprendido .t{font-size:12.5px;font-weight:650;color:var(--ink-3);}
+.aprendido .d{font-size:14.5px;color:var(--ink);margin-top:2px;}
+.meta-card{background:#fff;border:1px solid var(--line);border-radius:var(--r2);padding:var(--s4) var(--s5);box-shadow:var(--e0);}
+.meta-card .t{font-size:12.5px;font-weight:650;color:var(--ink-3);margin-bottom:var(--s3);}
+.meta-card ul{margin:0;padding:0;list-style:none;display:grid;gap:var(--s3);}
+.meta-card li{font-size:14.5px;color:var(--ink-2);padding-left:var(--s4);position:relative;line-height:1.45;}
+.meta-card li::before{content:"";position:absolute;left:0;top:9px;width:5px;height:5px;border-radius:50%;background:var(--coral);}
+
+/* ============================================================
+   MODAL
+   ============================================================ */
+.telon{position:fixed;inset:0;background:rgba(18,17,32,.52);display:flex;align-items:center;justify-content:center;padding:var(--s5);z-index:80;animation:fade .22s var(--ease);}
+@keyframes fade{from{opacity:0;}to{opacity:1;}}
+.modal{
+  background:var(--paper);border-radius:var(--r3);box-shadow:var(--e3);
+  max-width:452px;width:100%;padding:var(--s7) var(--s6) var(--s6);text-align:center;
+  animation:sube-modal .3s var(--ease);
+}
+@keyframes sube-modal{from{transform:translateY(14px) scale(.98);opacity:0;}to{transform:none;opacity:1;}}
+.modal .robot-svg{width:96px;height:auto;margin:0 auto var(--s4);display:block;}
+.modal h2{font-size:22px;}
+.modal p{font-size:14.5px;color:var(--ink-2);margin-top:var(--s2);}
+.modal .puntos-mini{display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:13px;color:var(--glow-d);margin-top:var(--s4);font-variant-numeric:tabular-nums;}
+.entornos{display:grid;gap:var(--s2);margin-top:var(--s5);}
+.entornos a{justify-content:center;}
+.modal .nota{font-size:12.5px;color:var(--ink-4);margin-top:var(--s4);}
+.modal .fila{justify-content:center;margin-top:var(--s3);}
+.particula{position:fixed;width:7px;height:7px;pointer-events:none;z-index:90;}
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+@media (max-width:840px){
+  .taller,.parejas,.tarjetas{grid-template-columns:1fr;}
+  .panel{min-height:0;}
+  .cadena{grid-template-columns:1fr;}
+  .flecha-cad{justify-content:center;transform:rotate(90deg);}
+}
+@media (max-width:620px){
+  .app{padding:var(--s4) var(--s3) var(--s8);}
+  .hoja{padding:var(--s6) var(--s5) var(--s6) var(--s8);}
+  .hoja::after{left:30px;}
+  .espiral{left:12px;}
+  .hero-bar{padding:var(--s4) var(--s5);gap:var(--s3);}
+  .marcador{min-width:100%;}
+  .pregunta{font-size:17px;}
+  .stats{gap:var(--s6);}
+  .etapa-card{width:152px;}
+}
+@media (max-height:760px){ #escena{max-height:150px;} }
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.001ms !important;animation-iteration-count:1 !important;transition-duration:.001ms !important;scroll-behavior:auto !important;}
+}
+@media (prefers-reduced-motion:no-preference){
+  .obra-hero{animation:brilla 5s ease-in-out infinite;}
+  @keyframes brilla{0%,100%{opacity:.92;}50%{opacity:1;}}
+  #robot-hero{animation:flota 4s ease-in-out infinite;}
+  @keyframes flota{0%,100%{transform:translateY(0);}50%{transform:translateY(-3px);}}
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <header class="hero">
+    <svg id="escena" viewBox="0 0 800 196" role="img" aria-label="Sala de la instalación artística interactiva: el recorrido del proyecto CREA"></svg>
+    <div class="hero-bar">
+      <div>
+        <p class="eyebrow">Pensamiento Computacional · Ceibal</p>
+        <h1>CREA · Arte Interactivo</h1>
+        <p class="lema">Siete etapas de juego para preparar la instalación artística.</p>
+      </div>
+      <div class="marcador" id="marcador">
+        <div class="top">
+          <span class="estrella" id="ic-estrella"></span>
+          <span class="cifra" id="puntos">0</span>
+          <span class="lbl">puntos</span>
+        </div>
+        <div class="barra"><div class="relleno" id="relleno"></div></div>
+      </div>
+    </div>
+  </header>
+
+  <nav class="camino" aria-label="Etapas del proyecto">
+    <div class="rail" id="rail"></div>
+  </nav>
+
+  <main id="contenido"></main>
+
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ============================================================
+     ICONOGRAFÍA
+     ============================================================ */
+  function svg(d, extra){
+    return '<svg class="svg-ico' + (extra||'') + '" viewBox="0 0 24 24" aria-hidden="true">' + d + '</svg>';
+  }
+  var ICO = {
+    candado: svg('<path d="M7.6 10.4V7.9a4.4 4.4 0 0 1 8.8 0v2.5"/><rect x="4.8" y="10.4" width="14.4" height="9.2" rx="2.6"/>'),
+    tilde: svg('<path d="M4.8 12.4l4.8 4.8L19.2 7"/>'),
+    circulo: svg('<circle cx="12" cy="12" r="7"/>'),
+    estrella: svg('<path d="M12 2.8l2.85 5.9 6.45.9-4.7 4.5 1.15 6.35L12 17.4l-5.75 3.05L7.4 14.1 2.7 9.6l6.45-.9z"/>','fill'),
+    lampara: svg('<path d="M9.6 18.1h4.8"/><path d="M10.5 20.9h3"/><path d="M12 3.3a5.9 5.9 0 0 0-3.4 10.7c.5.4.8 1 .8 1.6v.5h5.2v-.5c0-.6.3-1.2.8-1.6A5.9 5.9 0 0 0 12 3.3z"/>'),
+    flecha: svg('<path d="M5 12h13M13.2 6.6L18.6 12l-5.4 5.4"/>'),
+    bloques: svg('<rect x="3.8" y="4.6" width="16.4" height="5.2" rx="1.8"/><rect x="3.8" y="14.2" width="16.4" height="5.2" rx="1.8"/>'),
+    banderin: svg('<path d="M6.2 20.8V4.4"/><path d="M6.2 5.2h10.6l-2.3 3.3 2.3 3.3H6.2z"/>'),
+    mover: svg('<path d="M4.2 12h15.6M14.4 7.2l4.8 4.8-4.8 4.8"/>'),
+    bucle: svg('<path d="M4.6 11.4a5.8 5.8 0 0 1 5.8-5.8h6.6"/><path d="M14.6 3l2.9 2.6-2.9 2.6"/><path d="M19.4 12.6a5.8 5.8 0 0 1-5.8 5.8H7"/><path d="M9.4 21l-2.9-2.6 2.9-2.6"/>'),
+    ojo: svg('<path d="M2.8 12S6.2 6 12 6s9.2 6 9.2 6-3.4 6-9.2 6-9.2-6-9.2-6z"/><circle cx="12" cy="12" r="2.5"/>'),
+    nota: svg('<path d="M9 18V5.2l10-2v12.6"/><ellipse cx="6.6" cy="18" rx="2.6" ry="2.2"/><ellipse cx="16.6" cy="15.8" rx="2.6" ry="2.2"/>'),
+    onda: svg('<path d="M4 12h2.6l2-5.4 3 12L14.6 12H20"/>'),
+    camara: svg('<path d="M3.4 8.4A2 2 0 0 1 5.4 6.4h2.2l1.4-2.2h6l1.4 2.2h2.2a2 2 0 0 1 2 2v8.2a2 2 0 0 1-2 2H5.4a2 2 0 0 1-2-2z"/><circle cx="12" cy="12.6" r="3.4"/>'),
+    boton: svg('<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/>'),
+    cuadro: svg('<rect x="3.6" y="4.4" width="16.8" height="13.4" rx="2"/><path d="M12 17.8v2.2"/><path d="M3.6 14l4-4 3.4 3.2 3-2.6 6.4 5"/>'),
+    martillo: svg('<path d="M13.6 6.6l3.8-3.8 3.8 3.8-3.8 3.8z"/><path d="M14.6 9.6L4.8 19.4a2 2 0 0 0 2.8 2.8l9.8-9.8"/>'),
+    libro: svg('<path d="M4.2 5.4a2 2 0 0 1 2-2h5v17.2h-5a2 2 0 0 0-2 2z"/><path d="M19.8 5.4a2 2 0 0 0-2-2h-5v17.2h5a2 2 0 0 1 2 2z"/>'),
+    cohete: svg('<path d="M13.2 3.6c3.7 0 7.2 3.5 7.2 7.2-2.1 3.3-5.3 5.3-8.2 6.3l-2.9-2.9c1-2.9 3-6.1 6.3-8.2"/><circle cx="14.6" cy="9.4" r="1.5"/><path d="M9.3 15c-1.6.6-2.5 2-2.8 4.7 2.7-.3 4.1-1.2 4.7-2.8"/>'),
+    chip: svg('<rect x="6.4" y="6.4" width="11.2" height="11.2" rx="2"/><path d="M9.6 3.6v2.8M14.4 3.6v2.8M9.6 17.6v2.8M14.4 17.6v2.8M3.6 9.6h2.8M3.6 14.4h2.8M17.6 9.6h2.8M17.6 14.4h2.8"/>'),
+    union: svg('<path d="M9.6 14.4l4.8-4.8"/><path d="M13.4 6.7l1.1-1.1a3.5 3.5 0 0 1 5 5l-1.1 1.1"/><path d="M10.6 17.3l-1.1 1.1a3.5 3.5 0 0 1-5-5l1.1-1.1"/>'),
+    entrada: svg('<path d="M14.4 4.4h4a1.8 1.8 0 0 1 1.8 1.8v11.6a1.8 1.8 0 0 1-1.8 1.8h-4"/><path d="M10 8.4L14 12l-4 3.6"/><path d="M14 12H3.8"/>'),
+    salida: svg('<path d="M9.6 4.4h-4A1.8 1.8 0 0 0 3.8 6.2v11.6a1.8 1.8 0 0 0 1.8 1.8h4"/><path d="M16 8.4l4 3.6-4 3.6"/><path d="M20 12H9.8"/>')
+  };
+  var CAT_ICO = {evento:ICO.banderin, movimiento:ICO.mover, control:ICO.bucle,
+                 apariencia:ICO.ojo, sonido:ICO.nota, sensores:ICO.onda};
+  var CAT_NOM = {evento:"Eventos", movimiento:"Movimiento", control:"Control",
+                 apariencia:"Apariencia", sonido:"Sonido", sensores:"Sensores"};
+  var CAT_COL = {evento:"var(--c-evento)", movimiento:"var(--c-movimiento)", control:"var(--c-control)",
+                 apariencia:"var(--c-apariencia)", sonido:"var(--c-sonido)", sensores:"var(--c-sensores)"};
+
+  /* ============================================================
+     DATOS DEL PROYECTO
+     ============================================================ */
+  var ETAPAS = [
+    {
+      n:1, clave:"instalacion", icono:ICO.cuadro,
+      titulo:"Instalaciones artísticas",
+      sub:"Etapa Inicio · Entrada, programa y salida",
+      concepto:"Una instalación artística es interactiva cuando reacciona a lo que hace la persona. Toda interacción tiene una entrada, un programa que la transforma y una salida.",
+      cierre:[
+        "¿A qué llamamos instalación artística interactiva?",
+        "¿Cuándo se ingresa información en la computadora?",
+        "¿Qué obra imaginan para su propia instalación?"
+      ],
+      actividades:[
+        {tipo:"quiz", render:"sala", titulo:"¿Es interactiva?",
+         consigna:"Una obra es <strong>interactiva</strong> cuando la persona hace algo y la obra le responde. Si solo se mira, no hay interacción.",
+         preguntas:[
+          {emoji:"🎭", p:"Un títere al que le late el corazón cuando lo saludan", o:["Es INTERACTIVA","No es interactiva"], c:0,
+           r:"La persona saluda (entrada) y el títere responde con el latido (salida)."},
+          {emoji:"🖼️", p:"Un cuadro colgado en la pared del pasillo", o:["Es INTERACTIVA","No es interactiva"], c:1,
+           r:"Es una obra hermosa, pero no cambia según lo que haga quien la mira."},
+          {emoji:"🎸", p:"Una guitarra de cartón que suena como un piano al tocar sus cuerdas", o:["Es INTERACTIVA","No es interactiva"], c:0,
+           r:"Tocar las cuerdas es la entrada y el sonido del piano es la salida."},
+          {emoji:"🗿", p:"Una escultura de arcilla apoyada sobre una mesa", o:["Es INTERACTIVA","No es interactiva"], c:1,
+           r:"No hay ningún programa que reaccione: la obra queda siempre igual."},
+          {emoji:"👹", p:"Un monstruo que enciende los ojos cuando alguien se acerca", o:["Es INTERACTIVA","No es interactiva"], c:0,
+           r:"Un sensor detecta la cercanía (entrada) y las luces se encienden (salida)."},
+          {emoji:"🎨", p:"Un mural pintado entre todo el grupo en el patio", o:["Es INTERACTIVA","No es interactiva"], c:1,
+           r:"Es una producción colectiva preciosa, pero no responde a las personas."},
+          {emoji:"👗", p:"Ropa tecnológica que emite sonidos al moverse", o:["Es INTERACTIVA","No es interactiva"], c:0,
+           r:"El movimiento entra por un sensor y el programa lo transforma en sonido."},
+          {emoji:"💡", p:"Un cuadro que cambia de colores cuando hay más luz en la sala", o:["Es INTERACTIVA","No es interactiva"], c:0,
+           r:"La intensidad de luz es la entrada y el cambio de color, la salida."}
+         ]},
+        {tipo:"cadena", titulo:"Entrada, programa y salida",
+         consigna:"En toda obra interactiva hay una <strong>entrada</strong> (lo que hace la persona), un <strong>programa</strong> que la transforma y una <strong>salida</strong> (lo que hace la obra). Completá la cadena de cada obra.",
+         casos:[
+          {emoji:"🎭", obra:"El títere del corazón que late",
+           entrada:{o:["Alguien lo saluda y el micrófono detecta el sonido","La persona escribe algo en el teclado","No hay ninguna entrada"], c:0,
+             r:"El saludo entra al programa a través del sensor de sonido."},
+           salida:{o:["Se apaga la computadora","El corazón se ilumina y late","Aparece una pregunta escrita"], c:1,
+             r:"La salida es lo que la obra hace cuando el programa termina de transformar la entrada."}},
+          {emoji:"🪞", obra:"El espejo chistoso",
+           entrada:{o:["La cámara detecta a la persona parada enfrente","Se presiona la tecla espacio","El programa espera 10 segundos"], c:0,
+             r:"En Scratch la cámara puede detectar personas y movimiento: eso es información de entrada."},
+           salida:{o:["Se cierra el proyecto","Aparecen anteojos y peluca sobre la imagen","Se borra el escenario"], c:1,
+             r:"La salida transforma el aspecto de quien se para frente al espejo."}},
+          {emoji:"👹", obra:"El monstruo de ojos brillantes",
+           entrada:{o:["Se agita la placa micro:bit","Un sensor detecta que alguien se acerca","Alguien apaga la luz de la sala"], c:1,
+             r:"El sensor de distancia o de luz avisa al programa que hay alguien cerca."},
+           salida:{o:["Se encienden los ojos y suena un rugido","La obra se apaga para siempre","Se imprime un dibujo"], c:0,
+             r:"Luces y sonido son dos salidas muy usadas en las obras interactivas."}}
+         ]}
+      ]
+    },
+
+    {
+      n:2, clave:"boton", icono:ICO.boton,
+      titulo:"Transformación Botones",
+      sub:"De botones, teclas o pines a sonidos, colores y movimiento",
+      concepto:"Presionar una tecla, un botón o un pin de contacto es una forma de ingresar información. El programa decide qué salida producir con esa entrada.",
+      cierre:[
+        "¿Qué bloques permiten que la persona ingrese información?",
+        "¿Qué interacción con botones o teclas le pueden agregar a su obra?",
+        "¿Qué partes del programa que exploraron pueden reutilizar?"
+      ],
+      actividades:[
+        {tipo:"quiz", render:"normal", titulo:"Entradas por contacto",
+         consigna:"Repasamos cómo entra la información cuando alguien presiona algo.",
+         preguntas:[
+          {p:"En Scratch, ¿qué bloque detecta que se presionó una tecla?", o:["«al presionar tecla ( )» (Eventos)","«mover 10 pasos» (Movimiento)","«esperar 1 segundos» (Control)"], c:0,
+           r:"Los bloques de Eventos son la puerta de entrada de la información al programa."},
+          {p:"En la placa micro:bit, ¿cuáles son las entradas por contacto?", o:["Solamente la pantalla de LEDs","Los botones A, B, A+B y los pines","El cable USB"], c:1,
+           r:"Con los pines se pueden armar teclados de frutas o instrumentos de cartón."},
+          {p:"En App Inventor, el componente que reacciona al toque se llama…", o:["Botón","Etiqueta","Reloj"], c:0,
+           r:"El componente Botón tiene el evento «Clic» para disparar las instrucciones."},
+          {p:"Si presiono una tecla y la obra cambia de color, ¿cuál es la salida?", o:["La tecla presionada","El cambio de color","El programa"], c:1,
+           r:"La salida es siempre el resultado que producimos: color, sonido, luz o movimiento."},
+          {p:"¿Por qué conviene explorar proyectos de otras personas antes de programar?", o:["Para copiarlos sin mirar","Para reutilizar partes que ya funcionan y adaptarlas","Porque no se puede programar de cero"], c:1,
+           r:"Reutilizar y reinventar es una estrategia válida: se aprende leyendo el código de otros."}
+         ]},
+        {tipo:"secuencia", titulo:"Programá la reacción al toque", entorno:"Scratch",
+         consigna:"Ordená los bloques para que la obra reaccione con sonido y color cuando alguien la toca.",
+         bloques:[
+          {t:"al presionar tecla espacio", cat:"evento"},
+          {t:"cambiar efecto color por 25", cat:"apariencia"},
+          {t:"tocar sonido «tambor» hasta que termine", cat:"sonido"},
+          {t:"decir «¡Me tocaste!» por 2 segundos", cat:"apariencia"}
+         ]}
+      ]
+    },
+
+    {
+      n:3, clave:"camara", icono:ICO.camara,
+      titulo:"Transformación Cámara",
+      sub:"De movimientos frente a la cámara a sonidos o colores",
+      concepto:"La cámara también ingresa información: el programa mide cuánto movimiento hay y transforma esa cantidad en colores, sonidos o acciones.",
+      cierre:[
+        "¿Qué información ingresa cuando usamos la cámara?",
+        "¿Dónde ocurre la transformación dentro del programa?",
+        "¿Qué obra de su instalación podría usar la cámara?"
+      ],
+      actividades:[
+        {tipo:"quiz", render:"normal", titulo:"La cámara como entrada",
+         consigna:"En Scratch la cámara se usa con los bloques de la categoría Sensores.",
+         preguntas:[
+          {p:"¿Qué bloque enciende la cámara en Scratch?", o:["«activar video» (Sensores)","«mostrar» (Apariencia)","«al presionar bandera verde» (Eventos)"], c:0,
+           r:"Sin activar el video, el programa no recibe nada de la cámara."},
+          {p:"El bloque «video movimiento en objeto» devuelve…", o:["Un color","Un número que indica cuánto movimiento hay","El nombre de la persona"], c:1,
+           r:"Ese número es la información de entrada que después transformamos."},
+          {p:"Para que la obra reaccione solo con movimientos grandes usamos…", o:["Un bloque de sonido","Una condición: si el movimiento es mayor que un número","Un cambio de fondo"], c:1,
+           r:"La condición filtra: con poco movimiento no pasa nada, con mucho se dispara la salida."},
+          {p:"Para que el programa esté siempre atento a la cámara conviene usar…", o:["«por siempre» (Control)","«esperar 5 segundos»","«detener todos»"], c:0,
+           r:"La repetición mantiene la obra escuchando la entrada todo el tiempo."},
+          {p:"En un «espejo chistoso», ¿cuál es la salida?", o:["La persona parada enfrente","Los anteojos y la peluca que aparecen","La cámara de la computadora"], c:1,
+           r:"La persona y la cámara son la entrada; lo que vemos aparecer es la salida."}
+         ]},
+        {tipo:"secuencia", titulo:"Programá el espejo interactivo", entorno:"Scratch",
+         consigna:"Ordená los bloques para que la obra cambie de color y suene cuando detecta movimiento frente a la cámara.",
+         bloques:[
+          {t:"al presionar bandera verde", cat:"evento"},
+          {t:"activar video", cat:"sensores"},
+          {t:"por siempre", cat:"control"},
+          {t:"si ⟨video movimiento en objeto > 30⟩ entonces", cat:"control", indent:true},
+          {t:"cambiar efecto color por 25", cat:"apariencia", indent:true},
+          {t:"tocar sonido «pop»", cat:"sonido", indent:true}
+         ]}
+      ]
+    },
+
+    {
+      n:4, clave:"sonido", icono:ICO.nota,
+      titulo:"Transformación Sonidos",
+      sub:"De sonidos o luz a colores, movimiento y luces",
+      concepto:"El micrófono y el sensor de luz miden intensidades. Una misma entrada puede transformarse en salidas muy distintas según cómo la programemos.",
+      cierre:[
+        "¿Qué diferencia hay entre un sonido fuerte y uno suave para el programa?",
+        "¿Qué salidas eligieron para su obra?",
+        "¿Se puede resolver la misma interacción de otra manera?"
+      ],
+      actividades:[
+        {tipo:"quiz", render:"normal", titulo:"Sonido y luz como entrada",
+         consigna:"Estos sensores no responden con un sí o un no: devuelven un número que indica cuánta intensidad hay.",
+         preguntas:[
+          {p:"En Scratch, el bloque «volumen del sonido» pertenece a…", o:["Sensores","Apariencia","Operadores"], c:0,
+           r:"Mide cuánto ruido llega al micrófono de la computadora."},
+          {p:"En micro:bit, para usar el sensor de sonido necesitamos…", o:["Una placa versión 2","Un cable de red","Una impresora"], c:0,
+           r:"El micrófono viene incorporado recién en la micro:bit V2."},
+          {p:"Si el programa dibuja líneas finas con luz suave y gruesas con luz intensa, la entrada es…", o:["El grosor de la línea","La intensidad de luz que recibe el dispositivo","El color de la pantalla"], c:1,
+           r:"La entrada es lo que se mide; el grosor de la línea es la salida."},
+          {p:"¿Qué necesitamos para que un grito encienda muchas luces y un susurro pocas?", o:["Comparar el valor del sensor con distintos números","Usar siempre el mismo bloque","Apagar el micrófono"], c:0,
+           r:"Con condiciones y comparaciones el programa decide cuánta salida producir."},
+          {p:"Dos grupos programaron la misma obra con bloques distintos y ambas funcionan. Entonces…", o:["Una está mal","Las dos soluciones son válidas","Hay que elegir la más larga"], c:1,
+           r:"En programación casi siempre hay más de un camino para el mismo problema."}
+         ]},
+        {tipo:"cadena", titulo:"Obras que escuchan y miran la luz",
+         consigna:"Volvemos a completar la cadena, ahora con obras que reaccionan al sonido y a la luz.",
+         casos:[
+          {emoji:"🥁", obra:"La orquesta ruidosa",
+           entrada:{o:["El volumen del sonido que llega al micrófono","La posición del mouse","La hora del día"], c:0,
+             r:"El micrófono mide la intensidad y le pasa ese número al programa."},
+           salida:{o:["Los lápices dibujan más gruesos y con otro color","Se apaga la placa","No pasa nada"], c:0,
+             r:"Un mismo dato de entrada puede transformarse en color, grosor, luz o movimiento."}},
+          {emoji:"🌗", obra:"El cuadro que despierta en la penumbra",
+           entrada:{o:["Un botón de la placa","El sensor de luz del dispositivo","Un sonido muy agudo"], c:1,
+             r:"El sensor de luz mide cuánta claridad hay alrededor de la obra."},
+           salida:{o:["Se encienden luces en la pantalla de LEDs","Se borra el programa","Se cierra la aplicación"], c:0,
+             r:"Cuando hay poca luz, la obra responde iluminándose."}},
+          {emoji:"🎤", obra:"La escultura que grita de colores",
+           entrada:{o:["Una persona canta o grita cerca de la obra","La obra se mueve sola","El programa elige al azar"], c:0,
+             r:"Sin acción de la persona no hay interacción: siempre hay una entrada."},
+           salida:{o:["El fondo cambia de color según la intensidad","La computadora se reinicia","Aparece un error"], c:0,
+             r:"Cuanto más fuerte el sonido, más cambia el color: eso es la transformación."}}
+         ]}
+      ]
+    },
+
+    {
+      n:5, clave:"movimiento", icono:ICO.chip,
+      titulo:"Transformación Movimiento",
+      sub:"De movimientos o distancia a sonidos, luces y colores",
+      concepto:"Agitar o inclinar un dispositivo también ingresa información. El acelerómetro mide el movimiento y el programa lo transforma en la salida que diseñamos.",
+      cierre:[
+        "¿Qué movimientos puede detectar su obra?",
+        "¿Qué eventos se desencadenan al sacudir o inclinar el dispositivo?",
+        "¿Qué partes de otros programas les sirvieron?"
+      ],
+      actividades:[
+        {tipo:"quiz", render:"normal", titulo:"Movimiento e inclinación",
+         consigna:"Estas entradas se usan sobre todo con micro:bit y con App Inventor.",
+         preguntas:[
+          {p:"El sensor que detecta si sacudimos la placa se llama…", o:["Acelerómetro","Micrófono","Altavoz"], c:0,
+           r:"Mide los cambios de movimiento en las tres direcciones."},
+          {p:"En MakeCode, el bloque «al agitar» pertenece a la categoría…", o:["Entrada (eventos)","Música","Bucles"], c:0,
+           r:"Los eventos de entrada avisan al programa que algo ocurrió."},
+          {p:"Si la obra dibuja líneas finas al inclinar a la izquierda y gruesas a la derecha, la entrada es…", o:["El grosor de la línea","La inclinación del dispositivo","El color elegido"], c:1,
+           r:"La inclinación se mide; el grosor es la salida que programamos."},
+          {p:"Para que una marioneta se mueva al agitar la placa necesitamos…", o:["Un servomotor conectado como salida","Solo la pantalla de LEDs","Apagar el sensor"], c:0,
+           r:"El movimiento como salida requiere un motor o un elemento que se mueva."},
+          {p:"¿Qué es lo primero que conviene escribir antes de programar la obra?", o:["Un plan: qué entrada, qué transformación y qué salida","El nombre de los autores","La lista de colores"], c:0,
+           r:"El plan de desarrollo ordena el trabajo y ayuda a dividirlo en partes."}
+         ]},
+        {tipo:"secuencia", titulo:"Programá la obra que se agita", entorno:"MakeCode · micro:bit",
+         consigna:"Ordená los bloques para que la placa responda cuando alguien la sacude.",
+         bloques:[
+          {t:"al agitar", cat:"evento"},
+          {t:"mostrar ícono corazón", cat:"apariencia"},
+          {t:"tocar tono Do durante 1 tiempo", cat:"sonido"},
+          {t:"pausa 500 ms", cat:"control"},
+          {t:"borrar pantalla", cat:"apariencia"}
+         ]}
+      ]
+    },
+
+    {
+      n:6, clave:"construir", icono:ICO.martillo,
+      titulo:"Construcción de la obra",
+      sub:"Plan de desarrollo · Programar la interacción",
+      concepto:"Programar una obra grande se vuelve posible al dividirla en partes pequeñas, usar nombres descriptivos y escribir un código que otras personas puedan leer.",
+      cierre:[
+        "¿Por qué es importante contar con un plan de desarrollo?",
+        "¿Qué dificultades tuvieron al programar la interactividad?",
+        "¿De qué están orgullosos en su obra artística?"
+      ],
+      actividades:[
+        {tipo:"quiz", render:"normal", titulo:"Cómo encaramos un problema grande",
+         consigna:"Estas son las prácticas que usamos mientras programamos la obra.",
+         preguntas:[
+          {p:"¿Cuál es la mejor manera de abordar un problema grande?", o:["Programarlo todo de una sola vez","Separarlo en tareas pequeñas","Esperar a que se resuelva solo"], c:1,
+           r:"Dividir en subproblemas permite avanzar y probar de a poco."},
+          {p:"¿Da lo mismo qué nombre le ponemos a los objetos y variables?", o:["Sí, da igual","No: los nombres descriptivos hacen el código entendible","Solo importa el color"], c:1,
+           r:"Un compañero tiene que poder leer el programa y entender qué hace."},
+          {p:"Si el plan de desarrollo queda incompleto o en otro orden…", o:["Está mal y hay que empezar de nuevo","Se puede probar igual y ajustarlo mientras programamos","Hay que borrar el proyecto"], c:1,
+           r:"Equivocarse y corregir es parte del proceso de programar."},
+          {p:"La mejor estrategia para programar algo parecido a lo que ya vimos es…", o:["Buscar ese proyecto, identificar las partes útiles y adaptarlas","Inventar todo desde cero siempre","Pedirle a otro que lo haga"], c:0,
+           r:"Reutilizar y combinar código es exactamente lo que hacen los programadores."},
+          {p:"Cuando la obra no funciona como esperábamos, lo mejor es…", o:["Dejarla así","Buscar el error por partes, probar y corregir","Cambiar de proyecto"], c:1,
+           r:"Identificar y corregir errores de forma sistemática es parte del trabajo."}
+         ]},
+        {tipo:"secuencia", titulo:"Programá la obra terminada", entorno:"Scratch",
+         consigna:"Ordená los bloques de una obra que responde cuando alguien toca la zona roja del dispositivo.",
+         bloques:[
+          {t:"al presionar bandera verde", cat:"evento"},
+          {t:"decir «Tocá la zona roja» por 2 segundos", cat:"apariencia"},
+          {t:"por siempre", cat:"control"},
+          {t:"si ⟨¿tocando el color rojo?⟩ entonces", cat:"control", indent:true},
+          {t:"tocar sonido «guitarra»", cat:"sonido", indent:true},
+          {t:"cambiar efecto remolino por 25", cat:"apariencia", indent:true}
+         ]}
+      ]
+    },
+
+    {
+      n:7, clave:"artistas", icono:ICO.libro,
+      titulo:"Cierre del proyecto",
+      sub:"Etapa Cierre · La muestra y la metacognición",
+      concepto:"Usamos la programación para crear algo nuevo y compartirlo. Reutilizar el trabajo de otros, dar crédito y compartir el propio código es parte de la cultura de programar.",
+      cierre:[
+        "¿Qué cosas de las que hicimos no conocían antes?",
+        "¿Cómo se sintieron al reinventar y construir sobre el trabajo de otro?",
+        "¿Cómo se sienten ahora frente a lo logrado?"
+      ],
+      actividades:[
+        {tipo:"parejas", titulo:"Uní cada palabra con su significado",
+         consigna:"Tocá una palabra y después su definición. Son las palabras que usamos durante todo el proyecto.",
+         pares:[
+          {a:"Entrada", b:"La información que la persona le da a la obra"},
+          {a:"Salida", b:"Lo que la obra hace como respuesta"},
+          {a:"Transformación", b:"Lo que ocurre dentro del programa entre la entrada y la salida"},
+          {a:"Sensor", b:"Componente que detecta sonido, luz, movimiento o distancia"},
+          {a:"Reutilizar", b:"Tomar partes de un programa que ya funciona y adaptarlas"},
+          {a:"Bitácora", b:"El registro donde el grupo documenta la evolución del proyecto"}
+         ]},
+        {tipo:"quiz", render:"normal", titulo:"Repaso final",
+         consigna:"Las últimas preguntas del proyecto CREA.",
+         preguntas:[
+          {p:"¿Es importante dar crédito a la persona cuyo trabajo nos sirvió de base?", o:["Sí, siempre","No hace falta","Solo si nos lo piden"], c:0,
+           r:"Reconocer el trabajo ajeno es parte de compartir código de manera responsable."},
+          {p:"Al reutilizar o reinventar un programa, ¿estamos programando?", o:["No, es copiar","Sí: hay que leer, entender, elegir y adaptar","Solo si cambiamos todo"], c:1,
+           r:"Interpretar y criticar código ajeno es una capacidad que se desarrolla programando."},
+          {p:"En un sistema de la vida real, como un ascensor, la entrada sería…", o:["El botón del piso que presionamos","El motor","El edificio"], c:0,
+           r:"Presionar el botón es la entrada; que el ascensor suba, la salida."},
+          {p:"¿Para qué usamos la computadora en este proyecto?", o:["Para usar programas hechos por otros","Para crear algo nuevo: nuestra propia obra interactiva","Para mirar videos"], c:1,
+           r:"De eso se trata la tarea de las y los programadores."},
+          {p:"En la muestra, cada obra debería tener…", o:["Solo el nombre de la escuela","El nombre de la obra, una breve descripción y sus autores","Nada escrito"], c:1,
+           r:"Así el público sabe qué hacer para interactuar con cada obra."}
+         ]}
+      ]
+    }
+  ];
+
+  /* ============================================================
+     ESTADO
+     ============================================================ */
+  var ENTORNOS = [
+    {n:"Scratch", u:"https://scratch.mit.edu/projects/editor"},
+    {n:"MakeCode · micro:bit", u:"https://makecode.microbit.org/"},
+    {n:"App Inventor", u:"https://ai2.appinventor.mit.edu/"}
+  ];
+  var puntos = 0, etapaActiva = 0;
+  var abiertas = [], progreso = [], cartelVisto = [], puntosEtapa = [];
+  for(var z=0; z<ETAPAS.length; z++){ abiertas.push(false); progreso.push(0); cartelVisto.push(false); puntosEtapa.push(0); }
+
+  var MAX_PUNTOS = (function(){
+    var t = 0;
+    for(var i=0;i<ETAPAS.length;i++){
+      var acts = ETAPAS[i].actividades;
+      for(var j=0;j<acts.length;j++){
+        var a = acts[j];
+        if(a.tipo === "quiz"){ t += a.preguntas.length * 10; }
+        if(a.tipo === "cadena"){ t += a.casos.length * 20; }
+        if(a.tipo === "secuencia"){ t += 30; }
+        if(a.tipo === "parejas"){ t += a.pares.length * 10; }
+      }
+    }
+    return t;
+  })();
+
+  var elPuntos   = document.getElementById("puntos");
+  var elRelleno  = document.getElementById("relleno");
+  var elMarcador = document.getElementById("marcador");
+  var elRail     = document.getElementById("rail");
+  var elCont     = document.getElementById("contenido");
+  var elEscena   = document.getElementById("escena");
+  document.getElementById("ic-estrella").innerHTML = ICO.estrella;
+
+  /* ============================================================
+     UTILIDADES
+     ============================================================ */
+  function el(tag, clase, texto){
+    var e = document.createElement(tag);
+    if(clase){ e.className = clase; }
+    if(texto !== undefined && texto !== null){ e.textContent = texto; }
+    return e;
+  }
+  function html(tag, clase, markup){
+    var e = document.createElement(tag);
+    if(clase){ e.className = clase; }
+    if(markup !== undefined){ e.innerHTML = markup; }
+    return e;
+  }
+  function mezclar(arr){
+    var a = arr.slice();
+    for(var i=a.length-1;i>0;i--){
+      var j = Math.floor(Math.random()*(i+1));
+      var t=a[i]; a[i]=a[j]; a[j]=t;
+    }
+    return a;
+  }
+  function norm(s){
+    s = String(s).toLowerCase().replace(/^\s+|\s+$/g,"");
+    if(s.normalize){ s = s.normalize("NFD").replace(/[\u0300-\u036f]/g,""); }
+    return s;
+  }
+  function reduceMotion(){
+    return window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  }
+
+  function sumar(n, origen){
+    puntos += n;
+    puntosEtapa[etapaActiva] += n;
+    elPuntos.textContent = puntos;
+    elRelleno.style.width = Math.min(100, (puntos/MAX_PUNTOS)*100) + "%";
+    elMarcador.className = "marcador";
+    void elMarcador.offsetWidth;
+    elMarcador.className = "marcador pulso";
+    if(!reduceMotion()){
+      var chip = el("div","chip-suma","+" + n);
+      var r = origen && origen.getBoundingClientRect ? origen.getBoundingClientRect() : elMarcador.getBoundingClientRect();
+      chip.style.left = (r.left + r.width/2 - 12) + "px";
+      chip.style.top  = (r.top - 4) + "px";
+      document.body.appendChild(chip);
+      setTimeout(function(){ if(chip.parentNode){ chip.parentNode.removeChild(chip); } }, 950);
+    }
+    pintarHero();
+  }
+
+  function celebrar(x, y){
+    if(reduceMotion()){ return; }
+    var cols = ["#6A4FCF","#E29A2B","#D3564F","#3E96B8"];
+    for(var i=0;i<10;i++){
+      (function(i){
+        var p = el("div","particula");
+        p.style.background = cols[i % cols.length];
+        p.style.left = x + "px";
+        p.style.top = y + "px";
+        p.style.borderRadius = (i % 2 ? "50%" : "2px");
+        document.body.appendChild(p);
+        var ang = (Math.PI*2)*(i/10) + Math.random()*0.5;
+        var dist = 52 + Math.random()*62;
+        p.animate([
+          {transform:"translate(0,0) scale(1)", opacity:1},
+          {transform:"translate("+(Math.cos(ang)*dist)+"px,"+(Math.sin(ang)*dist-26)+"px) rotate(180deg) scale(.4)", opacity:0}
+        ], {duration:640 + Math.random()*260, easing:"cubic-bezier(.22,.7,.25,1)"});
+        setTimeout(function(){ if(p.parentNode){ p.parentNode.removeChild(p); } }, 950);
+      })(i);
+    }
+  }
+
+  /* ============================================================
+     HERO · SALA DE LA MUESTRA
+     ============================================================ */
+  function pintarHero(){
+    var W = 800, H = 196, piso = 150;
+    var x0 = 64, paso = (W - 128) / (ETAPAS.length - 1);
+    var s = [];
+
+    s.push('<defs>');
+    s.push('<linearGradient id="gPared" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#EDEAF8"/><stop offset="1" stop-color="#E3DFF2"/></linearGradient>');
+    s.push('<linearGradient id="gPiso" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#CFC6AE"/><stop offset="1" stop-color="#BFB59A"/></linearGradient>');
+    s.push('<linearGradient id="gFoco" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFE9B8" stop-opacity=".75"/><stop offset="1" stop-color="#FFE9B8" stop-opacity="0"/></linearGradient>');
+    s.push('</defs>');
+
+    s.push('<rect width="'+W+'" height="'+H+'" fill="url(#gPared)"/>');
+    s.push('<rect x="0" y="'+piso+'" width="'+W+'" height="'+(H-piso)+'" fill="url(#gPiso)"/>');
+    s.push('<line x1="0" y1="'+piso+'" x2="'+W+'" y2="'+piso+'" stroke="#A79C82" stroke-width="1.4" opacity=".6"/>');
+    /* riel de luces */
+    s.push('<rect x="34" y="14" width="732" height="4" rx="2" fill="#C9C3DE"/>');
+
+    for(var i=0;i<ETAPAS.length;i++){
+      var x = x0 + paso*i;
+      var completa = abiertas[i] && progreso[i] >= ETAPAS[i].actividades.length;
+      var abierta = abiertas[i];
+
+      /* foco */
+      s.push('<rect x="'+(x-4)+'" y="18" width="8" height="7" rx="2" fill="#8E86AE"/>');
+      if(completa){
+        s.push('<path d="M'+(x-3)+' 25 L'+(x-30)+' '+piso+' L'+(x+30)+' '+piso+' L'+(x+3)+' 25 Z" fill="url(#gFoco)"/>');
+      }
+
+      /* pedestal */
+      s.push('<rect x="'+(x-16)+'" y="'+(piso-16)+'" width="32" height="16" rx="2" fill="'+(abierta ? "#EFEBE0" : "#DCD6C6")+'"/>');
+      s.push('<ellipse cx="'+x+'" cy="'+(piso+2)+'" rx="20" ry="4" fill="#8E8471" opacity=".22"/>');
+
+      /* obra sobre el pedestal */
+      var g = '<g class="' + (completa ? "obra-hero" : "") + '" style="animation-delay:'+(i*0.5)+'s" transform="translate('+x+','+(piso-16)+')">';
+      if(completa){
+        var tono = ["#6A4FCF","#D3564F","#E29A2B","#3E96B8"][i % 4];
+        g += '<circle cx="0" cy="-26" r="15" fill="'+tono+'"/>';
+        g += '<circle cx="0" cy="-26" r="7" fill="#FCFAF5" opacity=".9"/>';
+        g += '<path d="M-22 -8 L22 -8" stroke="'+tono+'" stroke-width="3" stroke-linecap="round" opacity=".55"/>';
+      }else if(abierta){
+        g += '<rect x="-13" y="-34" width="26" height="26" rx="4" fill="none" stroke="#9C93BE" stroke-width="2.4"/>';
+        g += '<circle cx="0" cy="-21" r="4" fill="#9C93BE"/>';
+      }else{
+        g += '<rect x="-11" y="-30" width="22" height="22" rx="4" fill="#D3CEE2"/>';
+        g += '<path d="M-4 -19v-3a4 4 0 0 1 8 0v3" fill="none" stroke="#fff" stroke-width="2"/>';
+        g += '<rect x="-6" y="-19" width="12" height="8" rx="2" fill="#fff"/>';
+      }
+      g += '</g>';
+      s.push(g);
+
+      s.push('<text x="'+x+'" y="'+(piso+22)+'" font-size="10" font-family="ui-monospace,monospace" fill="#7A705C" text-anchor="middle">'+ETAPAS[i].n+'</text>');
+    }
+
+    /* robot visitante */
+    var rx = x0 + paso*etapaActiva;
+    s.push('<g style="transform:translate('+(rx-42)+'px,'+(piso)+'px);transition:transform .75s cubic-bezier(.34,1.25,.5,1)">');
+    s.push('<ellipse cx="0" cy="0" rx="15" ry="4" fill="#6B6252" opacity=".2"/>');
+    s.push('<g id="robot-hero">');
+    s.push('<rect x="-13" y="-30" width="26" height="22" rx="7" fill="#6A4FCF"/>');
+    s.push('<rect x="-8" y="-25" width="16" height="9" rx="4.5" fill="#F2EFFB"/>');
+    s.push('<circle cx="-3.6" cy="-20.5" r="2" fill="#1A1B2B"/><circle cx="3.6" cy="-20.5" r="2" fill="#1A1B2B"/>');
+    s.push('<path d="M0 -30 v-5" stroke="#6A4FCF" stroke-width="2" stroke-linecap="round"/><circle cx="0" cy="-37" r="2.6" fill="#E29A2B"/>');
+    s.push('<rect x="-9" y="-8" width="18" height="8" rx="3" fill="#563EB2"/>');
+    s.push('</g></g>');
+
+    elEscena.innerHTML = s.join("");
+  }
+
+  /* ============================================================
+     CAMINO
+     ============================================================ */
+  function pintarRail(){
+    elRail.innerHTML = "";
+    for(var i=0;i<ETAPAS.length;i++){
+      (function(i){
+        var e = ETAPAS[i];
+        var completa = abiertas[i] && progreso[i] >= e.actividades.length;
+        var card = el("button","etapa-card" + (abiertas[i] ? "" : " bloqueada") + (completa ? " completa" : "") + (i===etapaActiva ? " activa" : ""));
+        card.setAttribute("aria-current", i===etapaActiva ? "true" : "false");
+        var f1 = el("div","fila1");
+        f1.appendChild(el("span","badge","0" + e.n));
+        f1.appendChild(html("span","estado", abiertas[i] ? (completa ? ICO.tilde : ICO.circulo) : ICO.candado));
+        card.appendChild(f1);
+        card.appendChild(el("div","nom", abiertas[i] ? e.titulo : "Etapa bloqueada"));
+        var dots = el("div","dots");
+        for(var k=0;k<e.actividades.length;k++){
+          dots.appendChild(el("i", (abiertas[i] && progreso[i] > k) ? "on" : ""));
+        }
+        card.appendChild(dots);
+        card.addEventListener("click", function(){ etapaActiva = i; render(); });
+        elRail.appendChild(card);
+      })(i);
+    }
+  }
+
+  /* ============================================================
+     COMPARTIDOS
+     ============================================================ */
+  function feedback(tipo, titulo, texto, pistaHTML){
+    var d = el("div", "fb fb-" + tipo + " on");
+    d.appendChild(html("span","ic", tipo === "ok" ? ICO.tilde : (tipo === "casi" ? ICO.lampara : ICO.circulo)));
+    var c = el("div");
+    c.appendChild(el("div","tit", titulo));
+    c.appendChild(el("div","txt", texto));
+    if(pistaHTML){ c.appendChild(html("div","pista", pistaHTML)); }
+    d.appendChild(c);
+    return d;
+  }
+  function pasos(total, actual){
+    var d = el("div","pasos");
+    for(var k=0;k<total;k++){
+      d.appendChild(el("i", k<actual ? "hecho" : (k===actual ? "actual" : "")));
+    }
+    d.appendChild(el("span","n",(actual<total ? actual+1 : total) + " / " + total));
+    return d;
+  }
+  function botonSiguiente(host, texto){
+    var f = el("div","fila");
+    var b = html("button","btn btn-1", texto + ICO.flecha);
+    b.addEventListener("click", terminarActividad);
+    f.appendChild(b);
+    host.appendChild(f);
+    b.focus();
+  }
+
+  /* ============================================================
+     RENDER
+     ============================================================ */
+  function render(){
+    pintarRail();
+    pintarHero();
+    elCont.innerHTML = "";
+    var hoja = el("section","hoja");
+    var esp = el("div","espiral");
+    for(var s=0;s<8;s++){ esp.appendChild(el("i")); }
+    hoja.appendChild(esp);
+    elCont.appendChild(hoja);
+
+    var e = ETAPAS[etapaActiva];
+    if(!abiertas[etapaActiva]){ renderCandado(hoja, e); return; }
+
+    var enc = el("div","enc");
+    enc.appendChild(el("p","eyebrow", e.sub));
+    enc.appendChild(el("h2",null,e.titulo));
+    hoja.appendChild(enc);
+
+    if(progreso[etapaActiva] >= e.actividades.length){
+      renderCierre(hoja, e);
+      if(!cartelVisto[etapaActiva]){
+        cartelVisto[etapaActiva] = true;
+        setTimeout(function(){ mostrarCartel(e); }, 460);
+      }
+      return;
+    }
+
+    var act = e.actividades[progreso[etapaActiva]];
+    var cab = el("div","bloque-act");
+    cab.appendChild(el("h3","titulo-act", act.titulo));
+    cab.appendChild(html("p","consigna", act.consigna));
+    hoja.appendChild(cab);
+
+    var host = el("div","lienzo");
+    hoja.appendChild(host);
+
+    if(act.tipo === "quiz"){ juegoQuiz(host, act); }
+    if(act.tipo === "cadena"){ juegoCadena(host, act); }
+    if(act.tipo === "secuencia"){ juegoSecuencia(host, act); }
+    if(act.tipo === "parejas"){ juegoParejas(host, act); }
+
+    window.scrollTo({top:0, behavior: reduceMotion() ? "auto" : "smooth"});
+  }
+
+  function terminarActividad(){
+    progreso[etapaActiva]++;
+    render();
+  }
+
+  /* ============================================================
+     CANDADO
+     ============================================================ */
+  function renderCandado(hoja, e){
+    var d = el("div","candado");
+    d.appendChild(html("div", null,
+      '<svg class="escena-robot" viewBox="0 0 140 104" aria-hidden="true">' +
+      '<ellipse cx="70" cy="95" rx="40" ry="6" fill="#1A1B2B" opacity=".09"/>' +
+      '<rect x="54" y="56" width="50" height="36" rx="8" fill="#E29A2B"/>' +
+      '<path d="M66 56V46a13 13 0 0 1 26 0v10" fill="none" stroke="#B87A0F" stroke-width="6" stroke-linecap="round"/>' +
+      '<circle cx="79" cy="72" r="4.6" fill="#7A5406"/><rect x="76.9" y="72" width="4.2" height="9" rx="2.1" fill="#7A5406"/>' +
+      '<g transform="translate(32,74)">' +
+      '<rect x="-14" y="-24" width="28" height="24" rx="8" fill="#6A4FCF"/>' +
+      '<rect x="-9" y="-19" width="18" height="10" rx="5" fill="#F2EFFB"/>' +
+      '<circle cx="-4" cy="-14" r="2.2" fill="#1A1B2B"/><circle cx="4" cy="-14" r="2.2" fill="#1A1B2B"/>' +
+      '<path d="M0 -24v-6" stroke="#6A4FCF" stroke-width="2.4" stroke-linecap="round"/><circle cx="0" cy="-32" r="3" fill="#E29A2B"/>' +
+      '<rect x="-10" y="0" width="20" height="9" rx="3.5" fill="#563EB2"/>' +
+      '</g></svg>'));
+
+    d.appendChild(el("h2",null,"Etapa " + e.n + " · todavía cerrada"));
+    d.appendChild(el("p","exp","Esta parte de la muestra se abre con una palabra. Tu docente la da cuando el grupo llega a esta etapa del proyecto."));
+
+    var letras = el("div","letras");
+    for(var i=0;i<e.clave.length;i++){ letras.appendChild(el("i")); }
+    d.appendChild(letras);
+
+    var inp = document.createElement("input");
+    inp.type = "text";
+    inp.setAttribute("placeholder","·····");
+    inp.setAttribute("aria-label","Palabra secreta de la etapa " + e.n);
+    inp.setAttribute("autocomplete","off");
+    inp.setAttribute("spellcheck","false");
+    d.appendChild(inp);
+
+    var f = el("div","fila");
+    var b = html("button","btn btn-sol", ICO.candado + "Abrir la etapa");
+    f.appendChild(b);
+    d.appendChild(f);
+    var zonaFB = el("div");
+    d.appendChild(zonaFB);
+    hoja.appendChild(d);
+
+    function intentar(){
+      zonaFB.innerHTML = "";
+      if(norm(inp.value) === e.clave){
+        var r = b.getBoundingClientRect();
+        celebrar(r.left + r.width/2, r.top);
+        abiertas[etapaActiva] = true;
+        setTimeout(render, reduceMotion() ? 0 : 240);
+      }else{
+        zonaFB.appendChild(feedback("casi","Esa no es la palabra",
+          "Tiene " + e.clave.length + " letras. No importan las mayúsculas ni los acentos.", null));
+        inp.value = "";
+        inp.className = "";
+        void inp.offsetWidth;
+        inp.className = "error";
+        inp.focus();
+      }
+    }
+    b.addEventListener("click", intentar);
+    inp.addEventListener("keydown", function(ev){ if(ev.keyCode === 13){ intentar(); } });
+    inp.focus();
+  }
+
+  /* ============================================================
+     QUIZ
+     ============================================================ */
+  function juegoQuiz(host, act){
+    var lista = mezclar(act.preguntas), i = 0, pieza = null;
+
+    if(act.render === "sala"){
+      var v = html("div","sala", '<span class="foco"></span><span class="base"></span>');
+      pieza = el("span","pieza","🎭");
+      v.appendChild(pieza);
+      host.appendChild(v);
+    }
+
+    var preg = el("p","pregunta");
+    host.appendChild(preg);
+
+    var cont = el("div", act.render === "sala" ? "tarjetas" : "opciones");
+    host.appendChild(cont);
+
+    var zonaFB = el("div"); host.appendChild(zonaFB);
+    var zonaPasos = el("div"); host.appendChild(zonaPasos);
+    var pie = el("div"); host.appendChild(pie);
+
+    function pintar(){
+      var q = lista[i];
+      if(pieza){
+        pieza.textContent = q.emoji || "🎭";
+        pieza.className = "pieza";
+        void pieza.offsetWidth;
+        pieza.className = "pieza entra";
+      }
+      preg.textContent = q.p;
+      cont.innerHTML = "";
+      zonaFB.innerHTML = "";
+      pie.innerHTML = "";
+
+      for(var k=0;k<q.o.length;k++){
+        (function(k){
+          var b;
+          if(act.render === "sala"){
+            var esInter = (k === 0);
+            b = html("button","tarjeta-op",
+              '<span class="mini">' + (esInter ? ICO.entrada : ICO.cuadro) + '</span>' +
+              '<span><span class="t">' + q.o[k] + '</span>' +
+              '<span class="d">' + (esInter ? "La persona hace algo y la obra responde" : "Se mira, pero no reacciona") + '</span></span>');
+          }else{
+            b = html("button","op", '<span class="marca">' + ICO.tilde + '</span><span>' + q.o[k] + '</span>');
+          }
+          b.addEventListener("click", function(){ responder(k, b); });
+          cont.appendChild(b);
+        })(k);
+      }
+      zonaPasos.innerHTML = "";
+      zonaPasos.appendChild(pasos(lista.length, i));
+    }
+
+    function responder(k, boton){
+      var q = lista[i], bs = cont.children;
+      for(var j=0;j<bs.length;j++){ bs[j].disabled = true; }
+
+      if(k === q.c){
+        sumar(10, boton);
+        boton.className += " acierto";
+        zonaFB.appendChild(feedback("ok","¡Muy bien!", q.r, null));
+      }else{
+        boton.className += " fallo";
+        bs[q.c].className += " acierto";
+        for(var m=0;m<bs.length;m++){
+          if(m !== k && m !== q.c){ bs[m].className += " opaca"; }
+        }
+        zonaFB.appendChild(feedback("casi","Casi…", q.r, "La respuesta era: " + q.o[q.c]));
+      }
+
+      i++;
+      zonaPasos.innerHTML = "";
+      zonaPasos.appendChild(pasos(lista.length, i));
+
+      var f = el("div","fila");
+      var b = html("button","btn btn-1", (i < lista.length ? "Siguiente pregunta" : "Terminar actividad") + ICO.flecha);
+      b.addEventListener("click", i < lista.length ? pintar : terminarActividad);
+      f.appendChild(b);
+      pie.appendChild(f);
+      b.focus();
+    }
+
+    pintar();
+  }
+
+  /* ============================================================
+     CADENA · entrada → programa → salida
+     ============================================================ */
+  function juegoCadena(host, act){
+    var casos = act.casos;
+    var i = 0, fase = "entrada";
+
+    var cab = el("div","obra-cab");
+    var em = el("span","em","🎭");
+    var nom = el("span","nom","");
+    cab.appendChild(em); cab.appendChild(nom);
+    host.appendChild(cab);
+
+    var cadena = el("div","cadena");
+    var eEnt = el("div","eslabon");
+    eEnt.appendChild(el("div","rot","Entrada"));
+    var vEnt = el("div","val vacio","¿qué hace la persona?");
+    eEnt.appendChild(vEnt);
+
+    var f1 = html("div","flecha-cad", ICO.flecha);
+
+    var eProg = html("div","eslabon programa",
+      '<div class="rot">Programa</div><div class="ic">' + ICO.bloques + '</div>');
+
+    var f2 = html("div","flecha-cad", ICO.flecha);
+
+    var eSal = el("div","eslabon");
+    eSal.appendChild(el("div","rot","Salida"));
+    var vSal = el("div","val vacio","¿qué hace la obra?");
+    eSal.appendChild(vSal);
+
+    cadena.appendChild(eEnt); cadena.appendChild(f1); cadena.appendChild(eProg);
+    cadena.appendChild(f2); cadena.appendChild(eSal);
+    host.appendChild(cadena);
+
+    var preg = el("p","pregunta");
+    host.appendChild(preg);
+    var cont = el("div","opciones");
+    host.appendChild(cont);
+    var zonaFB = el("div"); host.appendChild(zonaFB);
+    var zonaPasos = el("div"); host.appendChild(zonaPasos);
+    var pie = el("div"); host.appendChild(pie);
+
+    function pintar(){
+      var c = casos[i];
+      em.textContent = c.emoji;
+      nom.textContent = c.obra;
+
+      if(fase === "entrada"){
+        vEnt.className = "val vacio"; vEnt.textContent = "¿qué hace la persona?";
+        vSal.className = "val vacio"; vSal.textContent = "¿qué hace la obra?";
+        eEnt.className = "eslabon activo";
+        eSal.className = "eslabon";
+        preg.textContent = "¿Cuál es la entrada de esta obra?";
+      }else{
+        eEnt.className = "eslabon lleno";
+        eSal.className = "eslabon activo";
+        preg.textContent = "¿Y cuál es la salida?";
+      }
+
+      var datos = (fase === "entrada") ? c.entrada : c.salida;
+      cont.innerHTML = "";
+      zonaFB.innerHTML = "";
+      pie.innerHTML = "";
+      for(var k=0;k<datos.o.length;k++){
+        (function(k){
+          var b = html("button","op", '<span class="marca">' + ICO.tilde + '</span><span>' + datos.o[k] + '</span>');
+          b.addEventListener("click", function(){ responder(k, b, datos); });
+          cont.appendChild(b);
+        })(k);
+      }
+      zonaPasos.innerHTML = "";
+      zonaPasos.appendChild(pasos(casos.length, i));
+    }
+
+    function responder(k, boton, datos){
+      var bs = cont.children;
+      for(var j=0;j<bs.length;j++){ bs[j].disabled = true; }
+      var correcta = datos.o[datos.c];
+
+      if(k === datos.c){
+        sumar(10, boton);
+        boton.className += " acierto";
+        zonaFB.appendChild(feedback("ok","¡Muy bien!", datos.r, null));
+      }else{
+        boton.className += " fallo";
+        bs[datos.c].className += " acierto";
+        for(var m=0;m<bs.length;m++){
+          if(m !== k && m !== datos.c){ bs[m].className += " opaca"; }
+        }
+        zonaFB.appendChild(feedback("casi","Casi…", datos.r, "La respuesta era: " + correcta));
+      }
+
+      if(fase === "entrada"){
+        vEnt.className = "val"; vEnt.textContent = correcta;
+      }else{
+        vSal.className = "val"; vSal.textContent = correcta;
+        eSal.className = "eslabon lleno";
+      }
+
+      var ultimo = (fase === "salida" && i === casos.length-1);
+      var f = el("div","fila");
+      var b = html("button","btn btn-1", (ultimo ? "Terminar actividad" : "Continuar") + ICO.flecha);
+      b.addEventListener("click", function(){
+        if(ultimo){ terminarActividad(); return; }
+        if(fase === "entrada"){ fase = "salida"; }
+        else { fase = "entrada"; i++; }
+        pintar();
+      });
+      f.appendChild(b);
+      pie.appendChild(f);
+      b.focus();
+
+      if(ultimo){
+        var r = cadena.getBoundingClientRect();
+        celebrar(r.left + r.width/2, r.top + 40);
+      }
+    }
+
+    pintar();
+  }
+
+  /* ============================================================
+     SECUENCIA
+     ============================================================ */
+  function juegoSecuencia(host, act){
+    var correcto = act.bloques;
+    var restantes = mezclar(correcto);
+    var puestos = 0, errores = 0;
+
+    if(act.entorno){
+      host.appendChild(html("span","entorno", ICO.chip + act.entorno));
+    }
+
+    var taller = el("div","taller");
+
+    var pA = el("div","panel");
+    pA.appendChild(html("h4", null, ICO.bloques + "Bloques sueltos"));
+    var listaA = el("div","pila"); pA.appendChild(listaA);
+
+    var pB = el("div","panel destino");
+    pB.appendChild(html("h4", null, ICO.banderin + "Programa de la obra"));
+    var listaB = el("div","pila"); pB.appendChild(listaB);
+
+    taller.appendChild(pA); taller.appendChild(pB);
+    host.appendChild(taller);
+
+    var zonaFB = el("div"); host.appendChild(zonaFB);
+    var pie = el("div"); host.appendChild(pie);
+
+    function pintarSueltos(){
+      listaA.innerHTML = "";
+      if(restantes.length === 0){
+        listaA.appendChild(el("p","vacio","No queda ningún bloque suelto."));
+        return;
+      }
+      for(var i=0;i<restantes.length;i++){
+        (function(bl){
+          var b = html("button","bloque b-" + bl.cat,
+            '<span class="cat-ic">' + CAT_ICO[bl.cat] + '</span>' + bl.t);
+          b.addEventListener("click", function(){ elegir(bl); });
+          listaA.appendChild(b);
+        })(restantes[i]);
+      }
+    }
+
+    function elegir(bl){
+      zonaFB.innerHTML = "";
+      if(bl === correcto[puestos]){
+        var v = listaB.querySelector(".vacio");
+        if(v){ listaB.innerHTML = ""; }
+        listaB.appendChild(html("div","bloque puesto b-" + bl.cat + (bl.indent ? " sangria" : ""),
+          '<span class="cat-ic">' + CAT_ICO[bl.cat] + '</span>' + bl.t));
+        restantes.splice(restantes.indexOf(bl),1);
+        puestos++;
+        pintarSueltos();
+        if(puestos === correcto.length){
+          var gan = Math.max(10, 30 - errores*5);
+          sumar(gan, pB);
+          zonaFB.appendChild(feedback("ok","Programa armado",
+            "Ganaste " + gan + " puntos. " + (errores > 0
+              ? "Probaste " + errores + " bloque(s) fuera de orden, y así también se aprende."
+              : "Lo ordenaste sin equivocarte ni una vez."), null));
+          var r = pB.getBoundingClientRect();
+          celebrar(r.left + r.width/2, r.top + 40);
+          botonSiguiente(pie, "Terminar actividad");
+        }
+      }else{
+        errores++;
+        var cat = correcto[puestos].cat;
+        zonaFB.appendChild(feedback("casi","Todavía no va ahí",
+          puestos === 0
+            ? "Pensá qué tiene que pasar primero de todo para que el programa arranque."
+            : "Pensá qué sucede justo después de «" + correcto[puestos-1].t + "».",
+          'El próximo bloque es de la categoría <span class="pill-cat" style="background:' + CAT_COL[cat] + '">' + CAT_ICO[cat] + CAT_NOM[cat] + '</span>'));
+      }
+    }
+
+    pintarSueltos();
+    listaB.appendChild(el("p","vacio","Acá se arma el programa, de arriba hacia abajo."));
+  }
+
+  /* ============================================================
+     PAREJAS
+     ============================================================ */
+  function juegoParejas(host, act){
+    var conceptos = mezclar(act.pares), definiciones = mezclar(act.pares);
+    var elegido = null, botonElegido = null, hechas = 0;
+
+    var grid = el("div","parejas");
+    var colA = el("div","col"), colB = el("div","col");
+    colA.appendChild(el("div","cab","Palabras"));
+    colB.appendChild(el("div","cab","Significados"));
+    grid.appendChild(colA); grid.appendChild(colB);
+    host.appendChild(grid);
+
+    var zonaFB = el("div"); host.appendChild(zonaFB);
+    var pie = el("div"); host.appendChild(pie);
+
+    function limpiar(){
+      if(botonElegido){ botonElegido.className = "par-btn concepto"; }
+      elegido = null; botonElegido = null;
+    }
+
+    for(var i=0;i<conceptos.length;i++){
+      (function(par){
+        var b = html("button","par-btn concepto",
+          '<span class="pin">' + ICO.union + '</span><span>' + par.a + '</span>');
+        b.addEventListener("click", function(){
+          zonaFB.innerHTML = "";
+          limpiar();
+          elegido = par; botonElegido = b;
+          b.className = "par-btn concepto elegido";
+        });
+        colA.appendChild(b);
+      })(conceptos[i]);
+    }
+
+    for(var j=0;j<definiciones.length;j++){
+      (function(par){
+        var b = html("button","par-btn",
+          '<span class="pin">' + ICO.circulo + '</span><span>' + par.b + '</span>');
+        b.addEventListener("click", function(){
+          zonaFB.innerHTML = "";
+          if(!elegido){
+            zonaFB.appendChild(feedback("info","Elegí primero una palabra",
+              "Tocá una palabra de la izquierda y después su significado.", null));
+            return;
+          }
+          if(elegido === par){
+            sumar(10, b);
+            hechas++;
+            botonElegido.className = "par-btn concepto unido";
+            botonElegido.querySelector(".pin").innerHTML = ICO.tilde;
+            botonElegido.disabled = true;
+            b.className = "par-btn unido";
+            b.querySelector(".pin").innerHTML = ICO.tilde;
+            b.disabled = true;
+            elegido = null; botonElegido = null;
+            if(hechas === act.pares.length){
+              zonaFB.appendChild(feedback("ok","Uniste todas",
+                "Estas son las palabras que usamos durante todo el proyecto CREA.", null));
+              var r = grid.getBoundingClientRect();
+              celebrar(r.left + r.width/2, r.top + 60);
+              botonSiguiente(pie, "Terminar actividad");
+            }else{
+              zonaFB.appendChild(feedback("ok","Par correcto",
+                "Quedan " + (act.pares.length - hechas) + " palabras por unir.", null));
+            }
+          }else{
+            zonaFB.appendChild(feedback("casi","Ese no es el par",
+              "Esa definición no corresponde a «" + elegido.a + "». Volvé a leerla con calma y probá otra.", null));
+            limpiar();
+          }
+        });
+        colB.appendChild(b);
+      })(definiciones[j]);
+    }
+  }
+
+  /* ============================================================
+     CIERRE
+     ============================================================ */
+  function renderCierre(hoja, e){
+    var d = el("div","cierre");
+    d.appendChild(html("div","sello", ICO.tilde));
+    d.appendChild(el("h2",null,"Etapa " + e.n + " completada"));
+    d.appendChild(el("p","sub", e.titulo));
+
+    var stats = el("div","stats");
+    var s1 = el("div","stat");
+    s1.appendChild(el("div","v","+" + puntosEtapa[etapaActiva]));
+    s1.appendChild(el("div","l","en esta etapa"));
+    var s2 = el("div","stat");
+    s2.appendChild(el("div","v", String(puntos)));
+    s2.appendChild(el("div","l","total de la sesión"));
+    stats.appendChild(s1); stats.appendChild(s2);
+    d.appendChild(stats);
+
+    var ap = el("div","aprendido");
+    ap.appendChild(html("span","ic", ICO.lampara));
+    var apT = el("div");
+    apT.appendChild(el("div","t","Lo que aprendimos"));
+    apT.appendChild(el("div","d", e.concepto));
+    ap.appendChild(apT);
+    d.appendChild(ap);
+
+    var meta = el("div","meta-card");
+    meta.appendChild(el("div","t","Para conversar entre todos"));
+    var ul = document.createElement("ul");
+    for(var i=0;i<e.cierre.length;i++){ ul.appendChild(el("li",null,e.cierre[i])); }
+    meta.appendChild(ul);
+    d.appendChild(meta);
+
+    var f = el("div","fila");
+    var bS = html("button","btn btn-cta", ICO.cohete + "Vamos a programar");
+    bS.addEventListener("click", function(){ mostrarCartel(e); });
+    f.appendChild(bS);
+    var b1 = html("button","btn btn-2","Repetir la etapa");
+    b1.addEventListener("click", function(){ progreso[etapaActiva] = 0; render(); });
+    f.appendChild(b1);
+    if(etapaActiva < ETAPAS.length-1){
+      var b2 = html("button","btn btn-2", "Etapa " + ETAPAS[etapaActiva+1].n + ICO.flecha);
+      b2.addEventListener("click", function(){ etapaActiva++; render(); });
+      f.appendChild(b2);
+    }
+    d.appendChild(f);
+    hoja.appendChild(d);
+  }
+
+  /* ============================================================
+     MODAL
+     ============================================================ */
+  function mostrarCartel(e){
+    var telon = el("div","telon");
+    var m = el("div","modal");
+    m.setAttribute("role","dialog");
+    m.setAttribute("aria-modal","true");
+
+    m.appendChild(html("div", null,
+      '<svg class="robot-svg" viewBox="0 0 110 92" aria-hidden="true">' +
+      '<ellipse cx="55" cy="85" rx="30" ry="5" fill="#1A1B2B" opacity=".10"/>' +
+      '<path d="M30 26 l-6-9" stroke="#E29A2B" stroke-width="3" stroke-linecap="round"/>' +
+      '<path d="M80 26 l6-9" stroke="#E29A2B" stroke-width="3" stroke-linecap="round"/>' +
+      '<g transform="translate(55,52)">' +
+      '<path d="M0 -34v-7" stroke="#6A4FCF" stroke-width="3" stroke-linecap="round"/><circle cx="0" cy="-44" r="4.4" fill="#E29A2B"/>' +
+      '<rect x="-24" y="-34" width="48" height="38" rx="12" fill="#6A4FCF"/>' +
+      '<rect x="-16" y="-26" width="32" height="17" rx="8.5" fill="#F2EFFB"/>' +
+      '<circle cx="-7" cy="-17.5" r="3.6" fill="#1A1B2B"/><circle cx="7" cy="-17.5" r="3.6" fill="#1A1B2B"/>' +
+      '<path d="M-6 -4 q 6 5 12 0" stroke="#F2EFFB" stroke-width="2.6" fill="none" stroke-linecap="round"/>' +
+      '<rect x="-17" y="6" width="34" height="14" rx="6" fill="#563EB2"/>' +
+      '</g></svg>'));
+
+    m.appendChild(el("h2",null,"Excelente, buen trabajo"));
+    m.appendChild(el("p",null,"Terminaron los juegos de la Etapa " + e.n + ". Ahora llevamos lo aprendido al entorno de programación: esta página es la guía, la obra se programa allá."));
+    m.appendChild(html("div","puntos-mini", ICO.estrella + " " + puntos + " puntos en la sesión"));
+
+    var ent = el("div","entornos");
+    for(var i=0;i<ENTORNOS.length;i++){
+      var a = document.createElement("a");
+      a.className = "btn " + (i === 0 ? "btn-cta" : "btn-2");
+      a.href = ENTORNOS[i].u;
+      a.target = "_blank";
+      a.rel = "noopener noreferrer";
+      a.innerHTML = (i === 0 ? ICO.cohete : ICO.flecha) + ENTORNOS[i].n;
+      ent.appendChild(a);
+    }
+    m.appendChild(ent);
+
+    var f = el("div","fila");
+    var b = html("button","btn btn-2","Quedarme acá");
+    b.addEventListener("click", cerrar);
+    f.appendChild(b);
+    m.appendChild(f);
+    m.appendChild(el("p","nota","Se abre en otra pestaña, así no perdés lo que hiciste acá."));
+
+    function cerrar(){
+      if(telon.parentNode){ document.body.removeChild(telon); }
+      document.removeEventListener("keydown", porTecla);
+    }
+    function porTecla(ev){ if(ev.keyCode === 27){ cerrar(); } }
+    telon.addEventListener("click", function(ev){ if(ev.target === telon){ cerrar(); } });
+    document.addEventListener("keydown", porTecla);
+
+    telon.appendChild(m);
+    document.body.appendChild(telon);
+    ent.querySelector("a").focus();
+  }
+
+  render();
+})();
+</script>
+</body>
+</html>
